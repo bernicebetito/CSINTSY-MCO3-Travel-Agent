@@ -1,3 +1,4 @@
+:- dynamic traveller/3.
 :- dynamic dutch/1.
 :- dynamic documents/2.
 :- dynamic work/2.
@@ -105,7 +106,7 @@ tourist(Name) :-
     write("Are you fully vaccinated? "), read(X),
     (
      X = yes, vaccine_questions(Name);
-     X = no, write("Your Vaccination is unfortunately invalid.");
+     valid_vaccination(Name, 0, others);
      writeln("Invalid Input!"), tourist(Name)
      ).
 
@@ -137,7 +138,11 @@ purpose_of_travel(Name):-
     ).
 
 basic_information(Name):-
-    write("What is your name? (Enclose in quotes) "), nl, read(Name).
+    write("What is your name? (Enclose in quotes) "), nl, read(Name),
+    write("What is your age? (Enclose in quotes) "), nl, read(Age),
+    write("What is your Nationality? (Enclose in quotes) "), nl, read(Citezenship),
+    assertz(traveller(Name, Age, Citizenship)).
+
 
 consultation:-
     basic_information(Name), nl,

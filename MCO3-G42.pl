@@ -1,3 +1,4 @@
+:- dynamic traveller/3.
 :- dynamic dutch/1.
 :- dynamic documents/2.
 :- dynamic work/2.
@@ -137,9 +138,10 @@ purpose_of_travel(Name):-
     ).
 
 basic_information(Name):-
-    write("What is your name? (Enclose in quotes) "), nl, read(Name).
-    write("What is your age? (Enclose in quotes) "), nl, read(Age).
-    write("What is your Nationality? (Enclose in quotes) "), nl, read(Citezenship).
+    write("What is your name? (Enclose in quotes) "), nl, read(Name),
+    write("What is your age? (Enclose in quotes) "), nl, read(Age),
+    write("What is your Nationality? (Enclose in quotes) "), nl, read(Citizenship),
+    assertz(traveller(Name, Age, Citizenship)).
 
 
 consultation:-
