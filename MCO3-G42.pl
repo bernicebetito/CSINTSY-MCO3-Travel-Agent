@@ -82,9 +82,8 @@ ofw(Name):-
     ).
 
 valid_vaccination(X, Y, Z) :-
-    (vaccinated(X, Y, Z),
-     (Z = pfizer; Z = moderna; Z = astrazeneca), Y > 14, writeln("Your Vaccination is Valid");
-     (Z = johnsonAndJohnson), Y > 28, writeln("Your Vaccination is Valid");
+    (vaccinated(X, Y, Z), (((Z = pfizer; Z = moderna; Z = astrazeneca), Y > 14);
+                          (Z = johnsonAndJohnson), Y > 28) -> writeln("Your Vaccination is Valid");
      writeln("Your Vaccination is unfortunately invalid.")
     ).
 
@@ -106,7 +105,7 @@ tourist(Name) :-
     write("Are you fully vaccinated? "), read(X),
     (
      X = yes, vaccine_questions(Name);
-     X = no, write("Your Vaccination is unfortunately invalid.");
+     valid_vaccination(Name, 0, others);
      writeln("Invalid Input!"), tourist(Name)
      ).
 
