@@ -4,7 +4,7 @@
 :- dynamic vaccinated/3.
 
 start:-
-    write("Hello World!"), nl.
+    write("Hello! Enter consultation. to start."), nl.
 
 transport_sector(Name):-
     (work(Name, transportOfGoods); work(Name, containerShips); work(Name, bulkCarriers);
