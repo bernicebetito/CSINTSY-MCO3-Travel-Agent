@@ -138,6 +138,9 @@ purpose_of_travel(Name):-
 
 basic_information(Name):-
     write("What is your name? (Enclose in quotes) "), nl, read(Name).
+    write("What is your age? (Enclose in quotes) "), nl, read(Age).
+    write("What is your Nationality? (Enclose in quotes) "), nl, read(Citezenship).
+
 
 consultation:-
     basic_information(Name), nl,
