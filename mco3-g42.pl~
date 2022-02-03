@@ -2,14 +2,19 @@
 :- dynamic dutch/1.
 :- dynamic documents/2.
 :- dynamic work/2.
+:- dynamic workSector/2.
+:- dynamic essentialWorker/1.
 :- dynamic vaccinated/3.
+:- dynamic validVaccination/1.
+:- dynamic returningResident/1.
 
 start:-
     write("Hello! Enter consultation. to start."), nl.
 
 transport_sector(Name):-
     (work(Name, transportOfGoods); work(Name, containerShips); work(Name, bulkCarriers);
-    work(Name, fishingBoats)) -> writeln("You are recognized as working in the Transport Sector.");
+    work(Name, fishingBoats)) -> assertz(workSector(Name, transport)),
+    writeln("You are recognized as working in the Transport Sector.");
     writeln("I'm sorry, unfortunately you are not recognized as working in the Transport Sector.").
 
 transport_questions(Name):-
@@ -28,7 +33,8 @@ transport_questions(Name):-
 
 energy_sector(Name):-
    (work(Name, oil); work(Name, gas); work(Name, wind);
-    work(Name, energyCompany)) -> write("You are recognized as working in the energy sector.");
+    work(Name, energyCompany)) -> assertz(workSector(Name, energy)),
+    write("You are recognized as working in the energy sector.");
     write("I'm sorry, unfortunately you are not recognized as working in the energy sector.").
 
 energy_questions(Name):-
@@ -84,7 +90,8 @@ ofw(Name):-
 
 valid_vaccination(X, Y, Z) :-
     (vaccinated(X, Y, Z), (((Z = pfizer; Z = moderna; Z = astrazeneca), Y > 14);
-                          (Z = johnsonAndJohnson), Y > 28) -> writeln("Your Vaccination is Valid");
+                          (Z = johnsonAndJohnson), Y > 28) -> assertz(validVaccination(X)),
+     writeln("Your Vaccination is Valid");
      writeln("Your Vaccination is unfortunately invalid.")
     ).
 
@@ -111,7 +118,8 @@ tourist(Name) :-
      ).
 
 returning_resident(Name):-
-    (documents(Name, residentVisa), not(dutch(Name))) -> writeln("You are considered a Returning Resident");
+    (documents(Name, residentVisa), not(dutch(Name))) -> assertz(returningResident(Name)),
+    writeln("You are considered a Returning Resident");
     writeln("You are unfortunately not considered a Returning Resident").
 
 resident(Name):-
@@ -140,7 +148,7 @@ purpose_of_travel(Name):-
 basic_information(Name):-
     write("What is your name? (Enclose in quotes) "), nl, read(Name),
     write("What is your age? (Enclose in quotes) "), nl, read(Age),
-    write("What is your Nationality? (Enclose in quotes) "), nl, read(Citezenship),
+    write("What is your Nationality? (Enclose in quotes) "), nl, read(Citizenship),
     assertz(traveller(Name, Age, Citizenship)).
 
 
