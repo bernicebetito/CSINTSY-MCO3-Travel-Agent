@@ -24,23 +24,23 @@ returning_resident(Name):-
     writeln("You are considered a Returning Resident");
     writeln("You are unfortunately not considered a Returning Resident").
 
-  essential_worker(Name):-
-      (work(Name, careWorker); work(Name, doctor); work(Name, nurse)) -> assertz(essentialWorker(Name)),
-      write("You are considered an Essential Worker.");
-      write("You are unfortunately not an essential worker.").
+essential_worker(Name):-
+    (work(Name, careWorker); work(Name, doctor); work(Name, nurse)) -> assertz(essentialWorker(Name)),
+    write("You are considered an Essential Worker.");
+    write("You are unfortunately not an essential worker.").
 
-  essential_worker_questions(Name) :-
-      writeln("What is your profession?"),
-      format("1 - Care Worker~n2 - Doctor~n3 - Nurse~n4 - Others~n5 - Exit~n"),
-      read(X),
-      (
-       X = 1, assertz(work(Name, careWorker));
-       X = 2, assertz(work(Name, doctor));
-       X = 3, assertz(work(Name, nurse));
-       X = 4, writeln("");
-       X = 5, ofw(Name);
-       writeln("Invalid Input!"), essential_worker_questions(Name)
-      ), essential_worker(Name).
+essential_worker_questions(Name) :-
+    writeln("What is your profession?"),
+    format("1 - Care Worker~n2 - Doctor~n3 - Nurse~n4 - Others~n5 - Exit~n"),
+    read(X),
+    (
+     X = 1, assertz(work(Name, careWorker));
+     X = 2, assertz(work(Name, doctor));
+     X = 3, assertz(work(Name, nurse));
+     X = 4, writeln("");
+     X = 5, write("Returning to previous question"), ofw(Name);
+     writeln("Invalid Input!"), essential_worker_questions(Name)
+    ), essential_worker(Name).
 
 transport_sector(Name):-
     (work(Name, transportOfGoods); work(Name, containerShips); work(Name, bulkCarriers);
@@ -58,7 +58,7 @@ transport_questions(Name):-
      X = 3 -> assertz(work(Name, bulkCarriers));
      X = 4 -> assertz(work(Name, fishingBoats));
      X = 5 -> writeln("");
-     X = 6 -> ofw(Name);
+     X = 6 -> write("Returning to previous question"), ofw(Name);
      writeln("Invalid Input!"), transport_questions(Name)
     ), transport_sector(Name).
 
@@ -83,9 +83,20 @@ energy_questions(Name):-
     X = 3 -> assertz(work(Name, wind));
     X = 4 -> assertz(work(Name, energyCompany));
     X = 5 -> write("");
-    X = 6 -> ofw(Name);
+    X = 6 -> write("Returning to previous question"), ofw(Name);
     writeln("Invalid input"), energy_questions(Name)
     ), energy_sector(Name).
+
+seafarer_questions(Name) :-
+    format("~nSelect what fits your situation:~n"),
+    format("1 - In possession of sefarer's record book (not on commercial yachts and pleasure crafts)~n"),
+    format("2 - On a commercial vessel with a length of 24 meters or more~n3 - Others~n4 - Exit~n"), read(X),
+    (
+    (X = 1; X = 2) -> assertz(workSector(Name, seafarer));
+    X = 3 -> write("");
+    X = 4 -> write("Returning to previous question"), ofw(Name);
+    writeln("Invalid input"), seafarer_questions(Name)
+    ).
 
 ofw(Name):-
     writeln("What sector are you working in?"),
@@ -98,7 +109,7 @@ ofw(Name):-
     writeln("7  - Flight Crew"),
     writeln("8  - Seafarer"),
     writeln("9  - Diplomat"),
-    writeln("10 - State Worker"),
+    writeln("10 - State Worker (In possession of service passport and need to travel)"),
     writeln("11 - Armed Forces"),
     writeln("12 - International / Humanitarian Organization Worker"),
     writeln("13 - Journalist"),
@@ -109,17 +120,18 @@ ofw(Name):-
     write("Choice: "), read(X),
     (
     X = 1 -> essential_worker_questions(Name);
-    X = 2 -> write("Cross-border commuter");
+    X = 2 -> assertz(workSector(Name, crossBorder));
     X = 3 -> essential_worker_questions(Name);
     X = 4 -> transport_questions(Name);
     X = 5 -> energy_questions(Name);
-    X = 6 -> write("Urgent Technical Assist");
-    X = 7 -> write("Flight Crew");
-    X = 8 -> write("Seafarer");
-    X = 9 -> write("Diplomat");
-    X = 10 -> write("State Worker");
-    X = 11 -> write("Armed Forces");
-    X = 12 -> write("International / Humanitarian Organization Worker");
+    X = 6 -> assertz(workSector(Name, urgentTech));
+    X = 7 -> assertz(workSector(Name, flightCrew));
+    X = 8 -> seafarer_questions(Name);
+    X = 9 -> assertz(workSector(Name, diplomat));
+    X = 10 -> assertz(workSector(Name, stateWorker));
+    X = 11 -> assertz(workSector(Name, armedForce));
+    X = 12 -> assertz(workSector(Name, orgWorker));
+
     X = 13 -> write("Journalist");
     X = 14 -> write("Elite Athlete");
     X = 15 -> write("Researcher");
@@ -136,15 +148,14 @@ business(X) :-
 
 business_invitation(Name) :-
     writeln("Has the travel date been confirmed? "),
-    format("1 - Yes~n2 - No~n3 - Exit"), read(X), (X = 3 -> business_questions(Name)),
+    format("1 - Yes~n2 - No~n"), read(X),
     writeln("Does the invitation show the following conditions?"),
     format("The trip relates to significant confirmed or potential direct foreign investment in the Netherlands which, within 3 years, will lead to:~n"),
     format("-> Creation of at least five new jobs or~n-> Investment of at least €500,000 in the Netherlands"),
     format("~n1 - Yes~n2 - No~n3 - Exit"), read(Y),
     (
-    (X = 1, Y = 1) -> assertz(business_purpose(Name, invite)), business(Name);
-    Y = 3 -> business_questions(Name);
-    ((X > 0, X < 2), (Y > 0, Y < 2)) -> business(Name);
+    (X = 1, Y = 1) -> assertz(business_purpose(Name, invite));
+    Y = 3 -> write("Returning to previous question"), business_questions(Name);
     writeln("Invalid Input!"), business_invitation(Name)
     ).
 
@@ -154,9 +165,8 @@ business_organization(Name) :-
     format("2 - Smaller organization invovled in socially relevant ground-breaking contributions to research, innovation, sustainability, or public health~n"),
     format("3 - Others~n4 - Exit~n"), read(X),
     (
-    (X = 1; X = 2) -> assertz(business_purpose(Name, organization)), business(Name);
-    X = 3 -> business(Name);
-    X = 4 -> business_questions(Name);
+    (X = 1; X = 2) -> assertz(business_purpose(Name, organization));
+    X = 4 -> write("Returning to previous question"), business_questions(Name);
     writeln("Invalid Input!"), business_organization(Name)
     ).
 
@@ -168,16 +178,15 @@ business_questions(Name) :-
     format("  -> Strengthening the Dutch Innovation Capacity~n  -> Making the Dutch Economy Sustainable~n  -> Further Digitalization of the Dutch Economy~n"),
     format("6 - Of major importance to a specific organization based in Netherlands~n7 - Others~n8 - Exit~n"), read(X),
     (
-    X = 1 -> assertz(business_purpose(Name, urgent)), business(Name);
-    X = 2 -> assertz(business_purpose(Name, physical)), business(Name);
-    X = 3 -> assertz(business_purpose(Name, economy)), business(Name);
+    X = 1 -> assertz(business_purpose(Name, urgent));
+    X = 2 -> assertz(business_purpose(Name, physical));
+    X = 3 -> assertz(business_purpose(Name, economy));
     X = 4 -> business_invitation(Name);
-    X = 5 -> assertz(business_purpose(Name, investment)), business(Name);
+    X = 5 -> assertz(business_purpose(Name, investment));
     X = 6 -> business_organization(Name);
-    X = 7 -> business(Name);
-    X = 8 -> purpose_of_travel(Name);
+    X = 8 -> write("Returning to previous question"), purpose_of_travel(Name);
     writeln("Invalid Input!"), business_questions(Name)
-    ).
+    ), business(Name).
 
 valid_vaccination(X, Y, Z) :-
     (vaccinated(X, Y, Z), (((Z = pfizer; Z = moderna; Z = astrazeneca), Y > 14);
@@ -196,7 +205,7 @@ vaccine_questions(X) :-
     Z = 2 -> assertz(vaccinated(X, Y, moderna)), valid_vaccination(X, Y, moderna);
     Z = 3 -> assertz(vaccinated(X, Y, astrazeneca)), valid_vaccination(X, Y, astrazeneca);
     Z = 4 -> assertz(vaccinated(X, Y, johnsonAndJohnson)), valid_vaccination(X, Y, johnsonAndJohnson);
-    Z = 5 -> valid_vaccination(X, Y, others);
+    Z = 5 -> write("Returning to previous question"), valid_vaccination(X, Y, others);
     writeln("Invalid input!"), nl, vaccine_questions(X)
     ).
 
@@ -206,7 +215,7 @@ tourist(Name) :-
     (
     X = 1, vaccine_questions(Name);
     X = 2, valid_vaccination(Name, 0, others);
-    X = 3, purpose_of_travel(Name);
+    X = 3, write("Returning to previous question"), purpose_of_travel(Name);
     writeln("Invalid Input!"), tourist(Name)
     ).
 
