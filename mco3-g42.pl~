@@ -155,4 +155,3 @@ basic_information(Name):-
 consultation:-
     basic_information(Name), nl,
     purpose_of_travel(Name).
-

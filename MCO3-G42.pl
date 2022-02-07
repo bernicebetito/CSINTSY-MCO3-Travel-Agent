@@ -4,12 +4,43 @@
 :- dynamic work/2.
 :- dynamic workSector/2.
 :- dynamic essentialWorker/1.
+:- dynamic business_purpose/2.
+:- dynamic validBusiness/1.
 :- dynamic vaccinated/3.
 :- dynamic validVaccination/1.
 :- dynamic returningResident/1.
 
 start:-
     write("Hello! Enter consultation. to start."), nl.
+
+resident(Name):-
+    write("Do you have a resident visa? "), read(Visa),
+    write("Are you a Dutch Citizen? "), read(Citizen),
+    (Visa = yes -> assertz(documents(Name, residentVisa)); Visa = no -> writeln("")),
+    (Citizen = yes -> assertz(dutch(Name)); Citizen = no -> writeln("")), returning_resident(Name).
+
+returning_resident(Name):-
+    (documents(Name, residentVisa), not(dutch(Name))) -> assertz(returningResident(Name)),
+    writeln("You are considered a Returning Resident");
+    writeln("You are unfortunately not considered a Returning Resident").
+
+  essential_worker(Name):-
+      (work(Name, careWorker); work(Name, doctor); work(Name, nurse)) -> assertz(essentialWorker(Name)),
+      write("You are considered an Essential Worker.");
+      write("You are unfortunately not an essential worker.").
+
+  essential_worker_questions(Name) :-
+      writeln("What is your profession?"),
+      format("1 - Care Worker~n2 - Doctor~n3 - Nurse~n4 - Others~n5 - Exit~n"),
+      read(X),
+      (
+       X = 1, assertz(work(Name, careWorker));
+       X = 2, assertz(work(Name, doctor));
+       X = 3, assertz(work(Name, nurse));
+       X = 4, writeln("");
+       X = 5, ofw(Name);
+       writeln("Invalid Input!"), essential_worker_questions(Name)
+      ), essential_worker(Name).
 
 transport_sector(Name):-
     (work(Name, transportOfGoods); work(Name, containerShips); work(Name, bulkCarriers);
@@ -56,36 +87,96 @@ energy_questions(Name):-
     writeln("Invalid input"), energy_questions(Name)
     ), energy_sector(Name).
 
-essential_worker(Name):-
-    (work(Name, careWorker); work(Name, doctor); work(Name, nurse)) -> write("You are considered an Essential Worker.");
-    write("You are unfortunately not an essential worker.").
-
-essential_worker_questions(Name) :-
-    writeln("What is your profession?"),
-    format("1 - Care Worker~n2 - Doctor~n3 - Nurse~n4 - Others~n5 - Exit~n"),
-    read(X),
-    (
-     X = 1, assertz(work(Name, careWorker));
-     X = 2, assertz(work(Name, doctor));
-     X = 3, assertz(work(Name, nurse));
-     X = 4, writeln("");
-     X = 5, ofw(Name);
-     writeln("Invalid Input!"), essential_worker_questions(Name)
-    ), essential_worker(Name).
-
 ofw(Name):-
     writeln("What sector are you working in?"),
-    writeln("1 - Essential Worker"),
-    writeln("2 - Energy Sector"),
-    writeln("3 - Transport Sector"),
-    writeln("4 - Exit"),
+    writeln("1  - Essential Worker"),
+    writeln("2  - Cross-Border Commuter"),
+    writeln("3  - Seasonal Worker"),
+    writeln("4  - Transport Sector"),
+    writeln("5  - Energy Sector"),
+    writeln("6  - Urgent Technical Assist"),
+    writeln("7  - Flight Crew"),
+    writeln("8  - Seafarer"),
+    writeln("9  - Diplomat"),
+    writeln("10 - State Worker"),
+    writeln("11 - Armed Forces"),
+    writeln("12 - International / Humanitarian Organization Worker"),
+    writeln("13 - Journalist"),
+    writeln("14 - Elite Athlete"),
+    writeln("15 - Researcher"),
+    writeln("16 - Cultural and Creative Sector"),
+    writeln("17 - Exit"),
     write("Choice: "), read(X),
     (
     X = 1 -> essential_worker_questions(Name);
-    X = 2 -> energy_questions(Name);
-    X = 3 -> transport_questions(Name);
-    X = 4 -> write("Returning to previous question"), purpose_of_travel(Name);
+    X = 2 -> write("Cross-border commuter");
+    X = 3 -> essential_worker_questions(Name);
+    X = 4 -> transport_questions(Name);
+    X = 5 -> energy_questions(Name);
+    X = 6 -> write("Urgent Technical Assist");
+    X = 7 -> write("Flight Crew");
+    X = 8 -> write("Seafarer");
+    X = 9 -> write("Diplomat");
+    X = 10 -> write("State Worker");
+    X = 11 -> write("Armed Forces");
+    X = 12 -> write("International / Humanitarian Organization Worker");
+    X = 13 -> write("Journalist");
+    X = 14 -> write("Elite Athlete");
+    X = 15 -> write("Researcher");
+    X = 16 -> write("Cultural and Creative Sector");
+    X = 17 -> write("Returning to previous question"), purpose_of_travel(Name);
     writeln("Invalid input"), ofw(Name)
+    ).
+
+business(X) :-
+    (business_purpose(X, urgent); business_purpose(X, physical); business_purpose(X, economy); business_purpose(X, invite);
+     business_purpose(X, investment); business_purpose(X, organization)) -> assertz(validBusiness(X)),
+     writeln("Your business is considered valid");
+     writeln("Your business is unfortunately considered invalid.").
+
+business_invitation(Name) :-
+    writeln("Has the travel date been confirmed? "),
+    format("1 - Yes~n2 - No~n3 - Exit"), read(X), (X = 3 -> business_questions(Name)),
+    writeln("Does the invitation show the following conditions?"),
+    format("The trip relates to significant confirmed or potential direct foreign investment in the Netherlands which, within 3 years, will lead to:~n"),
+    format("-> Creation of at least five new jobs or~n-> Investment of at least €500,000 in the Netherlands"),
+    format("~n1 - Yes~n2 - No~n3 - Exit"), read(Y),
+    (
+    (X = 1, Y = 1) -> assertz(business_purpose(Name, invite)), business(Name);
+    Y = 3 -> business_questions(Name);
+    ((X > 0, X < 2), (Y > 0, Y < 2)) -> business(Name);
+    writeln("Invalid Input!"), business_invitation(Name)
+    ).
+
+business_organization(Name) :-
+    writeln("What kind of organization?"),
+    format("1 - Has at least 10 FTEs and/or annual turnover of at least €2 Million~n"),
+    format("2 - Smaller organization invovled in socially relevant ground-breaking contributions to research, innovation, sustainability, or public health~n"),
+    format("3 - Others~n4 - Exit~n"), read(X),
+    (
+    (X = 1; X = 2) -> assertz(business_purpose(Name, organization)), business(Name);
+    X = 3 -> business(Name);
+    X = 4 -> business_questions(Name);
+    writeln("Invalid Input!"), business_organization(Name)
+    ).
+
+business_questions(Name) :-
+    format("~nPlease select your Official Business Reason for travelling:~n"),
+    format("1 - Urgent trip which cannot be postponed~n2 - Physical presence is required / Digital alternatives are not feasible~n"),
+    format("3 - Vitally Important for the Dutch economy~n4 - Invite from a Dutch private or public sector party~n"),
+    format("5 - Trip is related to potential direct foreign investment in Netherlands contributing to any of the following:~n"),
+    format("  -> Strengthening the Dutch Innovation Capacity~n  -> Making the Dutch Economy Sustainable~n  -> Further Digitalization of the Dutch Economy~n"),
+    format("6 - Of major importance to a specific organization based in Netherlands~n7 - Others~n8 - Exit~n"), read(X),
+    (
+    X = 1 -> assertz(business_purpose(Name, urgent)), business(Name);
+    X = 2 -> assertz(business_purpose(Name, physical)), business(Name);
+    X = 3 -> assertz(business_purpose(Name, economy)), business(Name);
+    X = 4 -> business_invitation(Name);
+    X = 5 -> assertz(business_purpose(Name, investment)), business(Name);
+    X = 6 -> business_organization(Name);
+    X = 7 -> business(Name);
+    X = 8 -> purpose_of_travel(Name);
+    writeln("Invalid Input!"), business_questions(Name)
     ).
 
 valid_vaccination(X, Y, Z) :-
@@ -97,36 +188,27 @@ valid_vaccination(X, Y, Z) :-
 
 vaccine_questions(X) :-
     writeln("What vaccine were you vaccinated with? "),
-    format("1 - Pfizer~n2 - Moderna~n3 - Astrazeneca~n4 - Johnson & Johnson~n5 - Others~n"),
+    format("1 - Pfizer~n2 - Moderna~n3 - Astrazeneca~n4 - Johnson & Johnson~n5 - Others~n6 - Exit~n"),
     read(Z),
     write("How many days ago did you get vaccinated? "), read(Y),
     (
-     Z = 1 -> assertz(vaccinated(X, Y, pfizer)), valid_vaccination(X, Y, pfizer);
-     Z = 2 -> assertz(vaccinated(X, Y, moderna)), valid_vaccination(X, Y, moderna);
-     Z = 3 -> assertz(vaccinated(X, Y, astrazeneca)), valid_vaccination(X, Y, astrazeneca);
-     Z = 4 -> assertz(vaccinated(X, Y, johnsonAndJohnson)), valid_vaccination(X, Y, johnsonAndJohnson);
-     Z = 5 -> valid_vaccination(X, Y, others);
-     writeln("Invalid input!"), nl, vaccine_questions(X)
-     ).
+    Z = 1 -> assertz(vaccinated(X, Y, pfizer)), valid_vaccination(X, Y, pfizer);
+    Z = 2 -> assertz(vaccinated(X, Y, moderna)), valid_vaccination(X, Y, moderna);
+    Z = 3 -> assertz(vaccinated(X, Y, astrazeneca)), valid_vaccination(X, Y, astrazeneca);
+    Z = 4 -> assertz(vaccinated(X, Y, johnsonAndJohnson)), valid_vaccination(X, Y, johnsonAndJohnson);
+    Z = 5 -> valid_vaccination(X, Y, others);
+    writeln("Invalid input!"), nl, vaccine_questions(X)
+    ).
 
 tourist(Name) :-
-    write("Are you fully vaccinated? "), read(X),
+    writeln("Are you fully vaccinated? "),
+    format("1 - Yes~n2 - No~n3 - Exit"), read(X),
     (
-     X = yes, vaccine_questions(Name);
-     valid_vaccination(Name, 0, others);
-     writeln("Invalid Input!"), tourist(Name)
-     ).
-
-returning_resident(Name):-
-    (documents(Name, residentVisa), not(dutch(Name))) -> assertz(returningResident(Name)),
-    writeln("You are considered a Returning Resident");
-    writeln("You are unfortunately not considered a Returning Resident").
-
-resident(Name):-
-    write("Do you have a resident visa? "), read(Visa),
-    write("Are you a Dutch Citizen? "), read(Citizen),
-    (Visa = yes -> assertz(documents(Name, residentVisa)); Visa = no -> writeln("")),
-    (Citizen = yes -> assertz(dutch(Name)); Citizen = no -> writeln("")), returning_resident(Name).
+    X = 1, vaccine_questions(Name);
+    X = 2, valid_vaccination(Name, 0, others);
+    X = 3, purpose_of_travel(Name);
+    writeln("Invalid Input!"), tourist(Name)
+    ).
 
 purpose_of_travel(Name):-
     write("Hello "), write(Name), write(" what is your purpose of travel?"), nl,
@@ -140,6 +222,7 @@ purpose_of_travel(Name):-
     (
     X = 2 -> resident(Name);
     X = 3 -> ofw(Name);
+    X = 4 -> business_questions(Name);
     X = 5 -> tourist(Name);
     X = 6 -> write("Exiting system...");
     writeln("Invalid input"), purpose_of_travel(Name)
