@@ -131,9 +131,8 @@ ofw(Name):-
     X = 10 -> assertz(workSector(Name, stateWorker));
     X = 11 -> assertz(workSector(Name, armedForce));
     X = 12 -> assertz(workSector(Name, orgWorker));
-
     X = 13 -> write("Journalist");
-    X = 14 -> write("Elite Athlete");
+    X = 14 -> assertz(workSector(Name, eliteAthlete));
     X = 15 -> write("Researcher");
     X = 16 -> write("Cultural and Creative Sector");
     X = 17 -> write("Returning to previous question"), purpose_of_travel(Name);
