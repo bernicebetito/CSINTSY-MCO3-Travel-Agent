@@ -242,7 +242,7 @@ vaccine_questions(X) :-
 
 tourist(Name) :-
     format("~nAre you fully vaccinated?~n"),
-    format("1 - Yes~n2 - No~n3 - Exit"), read(X),
+    format("1 - Yes~n2 - No~n3 - Exit~n"), read(X),
     (
     X = 1 -> vaccine_questions(Name);
     X = 2 -> valid_vaccination(Name, 0, others);
@@ -250,35 +250,60 @@ tourist(Name) :-
     writeln("Invalid Input!"), tourist(Name)
     ).
 
-documents_list(Name) :-
-  format("~nRequired Documents~n"),
-  purpose(Name, tourist) -> (
+documents_list(Document) :-
+  (
+  Document = vaccineDeclaration -> (
     writeln("* Vaccine Declaration Form"),
-    writeln("   - Must be accomplished and can be found at https://www.government.nl/topics/coronavirus-covid-19/documents/publications/2021/07/01/vaccine-declaration-covid-19"),
+    writeln("   - Must be accomplished and can be found at https://www.government.nl/topics/coronavirus-covid-19/documents/publications/2021/07/01/vaccine-declaration-covid-19")
+  );
+  Document = vaccineProof -> (
     writeln("* Proof of Vaccination"),
-    writeln("   - Can be either paper or digital certificate issued by a country taking part in the EU Digital Covid Certificate System"),
+    writeln("   - Can be either paper or digital certificate issued by a country taking part in the EU Digital Covid Certificate System")
+  );
+  Document = returnJourney -> (
     writeln("* Proof of Return Journey"),
-    writeln("   - Return ticket issued by airline, bus company, or railway company"),
-    writeln("* Visa"),
+    writeln("   - Return ticket issued by airline, bus company, or railway company")
+  );
+  Document = visa -> (
+    writeln("* Visa")
+  );
+  Document = negativeResult -> (
     writeln("* Negative Test Result"),
     writeln("   - Too many to mention")
   );
-  purpose(Name, business) -> (
-    writeln("* Vaccine Declaration Form"),
-    writeln("   - Must be accomplished and can be found at https://www.government.nl/topics/coronavirus-covid-19/documents/publications/2021/07/01/vaccine-declaration-covid-19"),
-    writeln("* Proof of Vaccination"),
-    writeln("   - Can be either paper or digital certificate issued by a country taking part in the EU Digital Covid Certificate System"),
-    writeln("* Proof of Return Journey"),
-    writeln("   - Return ticket issued by airline, bus company, or railway company"),
-    writeln("* Visa"),
-    writeln("* Negative Test Result"),
-    writeln("   - Too many to mention"),
+  Document = diplomaticNote -> (
     writeln("* Diplomatic note"),
-    writeln("   -  Issued by a Dutch embassy stating that you fall under an exemption to the entry ban"),
+    writeln("   -  Issued by a Dutch embassy stating that you fall under an exemption to the entry ban")
+  );
+  Document = hotelBooking -> (
     writeln("* Hotel Booking")
+  );
+  write("")
   ).
 
-purpose_of_travel(Name):-
+traveller_documents(Name) :-
+  format("~nRequired Documents~n"),
+  (
+  purpose(Name, tourist) -> (documents_list(vaccineDeclaration), documents_list(vaccineProof),
+  documents_list(returnJourney), documents_list(visa), documents_list(negativeResult));
+  purpose(Name, business) -> (documents_list(vaccineDeclaration), documents_list(vaccineProof),
+  documents_list(returnJourney), documents_list(visa), documents_list(negativeResult),
+  documents_list(diplomaticNote), documents_list(hotelBooking))
+  ), documents_procedure(Name).
+
+documents_procedure(Name) :-
+    (purpose(Name, citizen); purpose(Name, resident); purpose(Name, ofw); purpose(Name, business); purpose(Name, tourist)) -> (
+    nl, writeln("Congratulations! You are allowed to travel to the Netherlands."),
+    format("Select an Option:~n1 - Required Documents~n2 - Procedure~n3 - Exit~n"), read(X),
+    (
+    X = 1 -> traveller_documents(Name);
+    X = 3 -> writeln("Thank you for consulting!");
+    writeln("Invalid Input!"), documents_procedure(Name)
+    )
+    );
+    writeln("You are unfortunately not allowed to travel to the Netherlands.").
+
+purpose_of_travel(Name) :-
     write("Hello "), write(Name), write(" what is your purpose of travel?"), nl,
     writeln("1 - I am a Dutch citizen"),
     writeln("2 - I am a non-Dutch resident of the Netherlands"),
@@ -294,7 +319,7 @@ purpose_of_travel(Name):-
     X = 5 -> tourist(Name), assertz(purpose(Name, tourist));
     X = 6 -> write("Exiting system...");
     writeln("Invalid input"), purpose_of_travel(Name)
-    ), documents_list(Name).
+    ), documents_procedure(Name).
 
 basic_information(Name):-
     write("What is your name? (Enclose in quotes) "), nl, read(Name),
