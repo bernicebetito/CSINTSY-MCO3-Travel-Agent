@@ -33,7 +33,8 @@ resident_questions(Name) :-
     (
     Citizen = 1 -> assertz(dutch(Name));
     Citizen = 2 -> write("");
-    Citizen = 3 -> (retract(documents(Name, residentVisa)), writeln("Returning to previous question"), purpose_of_travel(Name));
+    Citizen = 3 -> ((documents(Name, residentVisa) -> retract(documents(Name, residentVisa)); write("")),
+    writeln("Returning to previous question"), purpose_of_travel(Name));
     (writeln("Invalid Input!"), resident_questions(Name))
     ), (Visa < 3, Citizen < 3) -> returning_resident(Name)
     ).
