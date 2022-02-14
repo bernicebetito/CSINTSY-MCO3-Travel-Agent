@@ -5,6 +5,8 @@
 :- dynamic work/2.
 :- dynamic workSector/2.
 :- dynamic essentialWorker/1.
+:- dynamic journalist_job/2.
+:- dynamic seafarer_job/2.
 :- dynamic business_purpose/2.
 :- dynamic validBusiness/1.
 :- dynamic vaccinated/3.
@@ -88,26 +90,35 @@ energy_questions(Name):-
     writeln("Invalid input"), energy_questions(Name)
     ), energy_sector(Name).
 
+seafarer(Name) :-
+    (seafarer_job(Name, recordBook); seafarer_job(Name, commercialVessel)) ->
+    (assertz(workSector(Name, seafarer)), assertz(purpose(Name, ofw)),writeln("You are considered a valid seafarer."));
+    writeln("You are unfortunately not considered a valid seafarer.").
+
 seafarer_questions(Name) :-
     format("~nSelect what fits your situation:~n"),
     format("1 - In possession of sefarer's record book (not on commercial yachts and pleasure crafts)~n"),
     format("2 - On a commercial vessel with a length of 24 meters or more~n3 - Others~n4 - Exit~n"), read(X),
     (
-    (X = 1; X = 2) -> assertz(workSector(Name, seafarer)), assertz(purpose(Name, ofw));
+    X = 1 -> assertz(seafarer_job(Name, recordBook));
+    X = 2 -> assertz(seafarer_job(Name, commercialVessel));
     X = 3 -> write("");
     X = 4 -> write("Returning to previous question"), ofw(Name);
     writeln("Invalid input"), seafarer_questions(Name)
-    ).
+    ), seafarer(Name).
 
 journalist(Name) :-
-    workSector(Name, journalist) -> assertz(purpose(Name, ofw)), writeln("You are considered a journalist.");
-    writeln("You are unfortunately not considered a journalist.").
+    journalist_job(Name, urgentPhysical) -> (assertz(workSector(Name, journalist)), assertz(purpose(Name, ofw)), writeln("You are considered a valid journalist."));
+    writeln("You are unfortunately not considered a valid journalist.").
 
 journalist_questions(Name) :-
-    format("~nAre you a journalist engaged in topical news reporting requiring immediate physical presence?~n"), read(X),
+    format("~nSelect which best fits your situation:~n"),
+    format("1 - A journalist engaged in topical news reporting requiring immediate physical presence~n"),
+    format("2 - Others~n3 - Exit~n"), read(X),
     (
-    X = yes -> assertz(workSector(Name, journalist));
-    X = no -> write("");
+    X = 1 -> assertz(journalist_job(Name, urgentPhysical));
+    X = 2 -> assertz(journalist_job(Name, others));
+    X = 3 -> write("Returning to previous question"), ofw(Name);
     writeln("Invalid Input!"), journalist_questions(Name)
     ), journalist(Name).
 
@@ -169,7 +180,7 @@ ofw(Name):-
     X = 14 -> assertz(workSector(Name, eliteAthlete)), assertz(purpose(Name, ofw));
     X = 15 -> write("Researcher");
     X = 16 -> cultural_questions(Name);
-    X = 17 -> write("");
+    X = 17 -> assertz(workSector(Name, others));
     X = 18 -> write("Returning to previous question"), purpose_of_travel(Name);
     writeln("Invalid input"), ofw(Name)
     ).
@@ -273,7 +284,8 @@ documents_list(Document) :-
   );
   Document = negativeResult -> (
     writeln("* Negative Test Result"),
-    writeln("   - Too many to mention")
+    writeln("   - From NAAT (PCR) test taken no more than 24 hours before departure"),
+    writeln("   - From a NAAT (PCR) test taken no more than 48 hours before departure and a negative result from an antigen test taken no more than 24 hours before departure.")
   );
   Document = diplomaticNote -> (
     writeln("* Diplomatic note"),
@@ -282,24 +294,62 @@ documents_list(Document) :-
   Document = hotelBooking -> (
     writeln("* Hotel Booking")
   );
+  Document = ipc -> (
+  writeln("* Any of the following:"),
+  writeln("   - International Press Card"),
+  writeln("   - Note verbale and a National Press Card or Card from the Media Organisation you work for")
+  );
+  Document = athleteInvite -> (
+    writeln("* Any of the following:"),
+    writeln("   - Note Verbale"),
+    writeln("   - Letter of invitation from the Netherlands Olympic Committee (NOC*NSF) or the Royal Netherlands Football Association (KNVB)")
+  );
+  Document = athleteProof -> (
+    writeln("* Valid proof of participation in an international sporting event, tournament, or match at the highest level"),
+    writeln("   - Officially recognised by an international sports federation with which the Netherlands is affiliated")
+  );
+  Document = culturalInvite -> (
+    writeln("* Letter of Invitation"),
+    writeln("   - Can be digital, provided that the signed original remains available for verification.")
+  );
+  Document = culturalEntry -> (
+    writeln("* Signed Entry Statement"),
+    writeln("   - Can be digital, provided that the signed original remains available for verification.")
+  );
   write("")
   ).
 
 traveller_documents(Name) :-
   format("~nRequired Documents~n"),
   (
-  purpose(Name, citizen) -> (documents_list(vaccineDeclaration), documents_list(vaccineProof),
-  documents_list(returnJourney), documents_list(visa), documents_list(negativeResult));
-  purpose(Name, resident) -> (documents_list(vaccineDeclaration), documents_list(vaccineProof),
-  documents_list(returnJourney), documents_list(visa), documents_list(negativeResult));
-  purpose(Name, ofw) -> (documents_list(vaccineDeclaration), documents_list(vaccineProof),
-  documents_list(returnJourney), documents_list(visa), documents_list(negativeResult));
-  purpose(Name, business) -> (documents_list(vaccineDeclaration), documents_list(vaccineProof),
+  purpose(Name, citizen) -> (
+  documents_list(vaccineDeclaration), documents_list(vaccineProof),
+  documents_list(returnJourney), documents_list(visa), documents_list(negativeResult)
+  );
+  purpose(Name, resident) -> (
+  documents_list(vaccineDeclaration), documents_list(vaccineProof),
+  documents_list(returnJourney), documents_list(visa), documents_list(negativeResult)
+  );
+  purpose(Name, ofw) -> (
+  documents_list(vaccineDeclaration), documents_list(vaccineProof),
+  documents_list(returnJourney), documents_list(visa), (
+  (not(workSector(Name, energy)), not(workSector(Name, tranport)),
+  not(workSector(Name, flightCrew)), not(workSector(Name, seafarer))) -> documents_list(negativeResult);
+  write("")
+  ),
+  (workSector(Name, journalist) -> documents_list(ipc); write("")),
+  (workSector(Name, eliteAthlete) -> (documents_list(athleteInvite), documents_list(athleteProof)); write("")),
+  (workSector(Name, cultural) -> (documents_list(culturalInvite), documents_list(culturalEntry)); write(""))
+  );
+  purpose(Name, business) -> (
+  documents_list(vaccineDeclaration), documents_list(vaccineProof),
   documents_list(returnJourney), documents_list(visa), documents_list(negativeResult),
-  documents_list(diplomaticNote), documents_list(hotelBooking));
-  purpose(Name, tourist) -> (documents_list(vaccineDeclaration), documents_list(vaccineProof),
-  documents_list(returnJourney), documents_list(visa), documents_list(negativeResult))
-  ), documents_procedure(Name).
+  documents_list(diplomaticNote), documents_list(hotelBooking)
+  );
+  purpose(Name, tourist) -> (
+  documents_list(vaccineDeclaration), documents_list(vaccineProof),
+  documents_list(returnJourney), documents_list(visa), documents_list(negativeResult)
+  )), documents_procedure(Name).
 
 documents_procedure(Name) :-
     (purpose(Name, citizen); purpose(Name, resident); purpose(Name, ofw); purpose(Name, business); purpose(Name, tourist)) -> (
