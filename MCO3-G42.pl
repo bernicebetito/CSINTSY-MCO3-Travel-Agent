@@ -4,6 +4,7 @@
 :- dynamic airline/2.
 :- dynamic dutch/1.
 :- dynamic european/1.
+:- dynamic euroResident/1.
 :- dynamic documents/2.
 :- dynamic work/2.
 :- dynamic workSector/2.
@@ -35,28 +36,29 @@ citizen_questions(Name) :-
     ), citizen(Name).
 
 returning_resident(Name) :-
-    (documents(Name, residentVisa), not(dutch(Name))) -> assertz(returningResident(Name)), assertz(purpose(Name, resident)),
-    writeln("You are considered a Returning Resident");
+    ((euroResident(Name); documents(Name, residentPermit); documents(Name, longStayVisa); documents(Name, notifImmigration)),
+    not(dutch(Name))) -> assertz(returningResident(Name)), assertz(purpose(Name, resident)), writeln("You are considered a Returning Resident");
     writeln("You are unfortunately not considered a Returning Resident").
 
 resident_questions(Name) :-
-    format("~nDo you have a resident visa?~n1 - Yes~n2 - No~n3 - Exit~n"), read(Visa),
+    format("~nSelect what best fits your situation:~n"),
+    writeln("1 - National or resident of one of the following:"),
+    format("  - Norway~n  - Iceland~n  - Switzerland~n  - Liechtenstein~n  - Monaco~n  - Andorra~n  - San Marino~n  - Vatican City~n"),
+    writeln("2 - National of a non-EU country and have a residence card or residence permit in accordance with Directive 2003/109/EEC"),
+    writeln("3 - National of a non-EU country and derive your right of residence from other EU directives or the national law of a Schengen Area Country"),
+    format("4 - Long-stay visa holder~n5 - In possession of a letter of notification from the Immigration and Naturalisation Service for long-term stay~n"),
+    format("6 - In possession of a valid residence permit for the Netherlands~n7 - Others~n8 - Exit~n"), read(X),
     (
-    Visa = 1 -> assertz(documents(Name, residentVisa));
-    Visa = 2 -> write("");
-    Visa = 3 -> (writeln("Returning to previous question"), purpose_of_travel(Name));
-    (writeln("Invalid Input!"), resident_questions(Name))
-    ),
-    (Visa = 1; Visa = 2) -> (
-    format("~nAre you a Dutch citizen?~n1 - Yes~n2 - No~n3 - Exit~n"), read(Citizen),
-    (
-    Citizen = 1 -> assertz(dutch(Name));
-    Citizen = 2 -> write("");
-    Citizen = 3 -> ((documents(Name, residentVisa) -> retract(documents(Name, residentVisa)); write("")),
-    writeln("Returning to previous question"), purpose_of_travel(Name));
-    (writeln("Invalid Input!"), resident_questions(Name))
-    ), (Visa < 3, Citizen < 3) -> returning_resident(Name)
-    ).
+    X = 1 -> assertz(euroResident(Name));
+    X = 2 -> assertz(documents(Name, residentPermit));
+    X = 3 -> assertz(euroResident(Name));
+    X = 4 -> assertz(documents(Name, longStayVisa));
+    X = 5 -> assertz(documents(Name, notifImmigration));
+    X = 6 -> assertz(documents(Name, residentPermit));
+    X = 7 -> write("");
+    X = 8 -> writeln("Returning to previous question"), purpose_of_travel(Name);
+    writeln("Invalid Input!"), resident_questions(Name)
+    ), returning_resident(Name).
 
 essential_worker(Name) :-
     (work(Name, careWorker); work(Name, doctor); work(Name, nurse)) -> (assertz(essentialWorker(Name)), assertz(purpose(Name, ofw)),
@@ -322,6 +324,10 @@ documents_list(Document) :-
     writeln("       = If you prefer to print, print 2 copies and fill up both"),
     writeln("       = If you prefer digital, fill up the PDF before the flight")
   );
+  Document = healthDeclarationAirline -> (
+    writeln("* Health Declaration Form"),
+    writeln("   - Part of your online check-in procedures with the airline")
+  );
   Document = vaccineDeclaration -> (
     writeln("* Vaccine Declaration Form"),
     writeln("   - Must be accomplished and can be found at https://www.government.nl/topics/coronavirus-covid-19/documents/publications/2021/07/01/vaccine-declaration-covid-19")
@@ -341,6 +347,19 @@ documents_list(Document) :-
     writeln("* Negative Test Result"),
     writeln("   - From NAAT (PCR) test taken no more than 24 hours before departure"),
     writeln("   - From a NAAT (PCR) test taken no more than 48 hours before departure and a negative result from an antigen test taken no more than 24 hours before departure.")
+  );
+  Document = euroResidentProof -> (
+    writeln("* Proof of Nationality / Residence")
+  );
+  Document = residentPermit -> (
+    writeln("* Resident Permit")
+  );
+  Document = longStay -> (
+    writeln("* Long Stay Visa")
+  );
+  Document = notifImmigration -> (
+    writeln("* Letter of Notification"),
+    writeln("   -  From the Immigration and Naturalisation Service")
   );
   Document = diplomaticNote -> (
     writeln("* Diplomatic note"),
@@ -383,23 +402,30 @@ traveller_documents(Name) :-
   format("~nRequired Documents~n"),
   (
   purpose(Name, citizen) -> (
-  (((traveller(Name, Y, _), (Y > 11)), (transportation(Name, airplane)),
-  not(airline(Name, klm); airline(Name, corendon); airline(Name, tui); airline(Name, transavia); airline(Name, easyjet))) ->
-  documents_list(healthDeclaration); write("")),
+  (((traveller(Name, Y, _), (Y > 11)), transportation(Name, airplane)) ->
+  (not(airline(Name, klm); airline(Name, corendon); airline(Name, tui);
+        airline(Name, transavia); airline(Name, easyjet)) ->
+  documents_list(healthDeclaration); documents_list(healthDeclarationAirline)); write("")),
   documents_list(vaccineDeclaration), documents_list(vaccineProof),
   documents_list(returnJourney), documents_list(negativeResult)
   );
   purpose(Name, resident) -> (
-  (((traveller(Name, Y, _), (Y > 11)), (transportation(Name, airplane)),
-  not(airline(Name, klm); airline(Name, corendon); airline(Name, tui); airline(Name, transavia); airline(Name, easyjet))) ->
-  documents_list(healthDeclaration); write("")),
+  (((traveller(Name, Y, _), (Y > 11)), transportation(Name, airplane)) ->
+  (not(airline(Name, klm); airline(Name, corendon); airline(Name, tui);
+        airline(Name, transavia); airline(Name, easyjet)) ->
+  documents_list(healthDeclaration); documents_list(healthDeclarationAirline)); write("")),
   documents_list(vaccineDeclaration), documents_list(vaccineProof),
-  documents_list(returnJourney), documents_list(visa), documents_list(negativeResult)
+  documents_list(returnJourney), documents_list(visa), documents_list(negativeResult),
+  (euroResident(Name) -> documents_list(euroResidentProof); write("")),
+  (documents(Name, residentPermit) -> documents_list(residentPermit); write("")),
+  (documents(Name, longStayVisa) -> documents_list(longStay); write("")),
+  (documents(Name, notifImmigration) -> documents_list(notifImmigration); write(""))
   );
   purpose(Name, ofw) -> (
-  (((traveller(Name, Y, _), (Y > 11)), (transportation(Name, airplane)),
-  not(airline(Name, klm); airline(Name, corendon); airline(Name, tui); airline(Name, transavia); airline(Name, easyjet))) ->
-  documents_list(healthDeclaration); write("")),
+  (((traveller(Name, Y, _), (Y > 11)), transportation(Name, airplane)) ->
+  (not(airline(Name, klm); airline(Name, corendon); airline(Name, tui);
+        airline(Name, transavia); airline(Name, easyjet)) ->
+  documents_list(healthDeclaration); documents_list(healthDeclarationAirline)); write("")),
   documents_list(vaccineDeclaration), documents_list(vaccineProof),
   documents_list(returnJourney), documents_list(visa), (
   (not(workSector(Name, energy)), not(workSector(Name, tranport)),
@@ -412,17 +438,19 @@ traveller_documents(Name) :-
   (workSector(Name, cultural) -> (documents_list(culturalInvite), documents_list(culturalEntry)); write(""))
   );
   purpose(Name, business) -> (
-  (((traveller(Name, Y, _), (Y > 11)), (transportation(Name, airplane)),
-  not(airline(Name, klm); airline(Name, corendon); airline(Name, tui); airline(Name, transavia); airline(Name, easyjet))) ->
-  documents_list(healthDeclaration); write("")),
+  (((traveller(Name, Y, _), (Y > 11)), transportation(Name, airplane)) ->
+  (not(airline(Name, klm); airline(Name, corendon); airline(Name, tui);
+        airline(Name, transavia); airline(Name, easyjet)) ->
+  documents_list(healthDeclaration); documents_list(healthDeclarationAirline)); write("")),
   documents_list(vaccineDeclaration), documents_list(vaccineProof),
   documents_list(returnJourney), documents_list(visa), documents_list(negativeResult),
   documents_list(diplomaticNote), documents_list(hotelBooking)
   );
   purpose(Name, tourist) -> (
-  (((traveller(Name, Y, _), (Y > 11)), (transportation(Name, airplane)),
-  not(airline(Name, klm); airline(Name, corendon); airline(Name, tui); airline(Name, transavia); airline(Name, easyjet))) ->
-  documents_list(healthDeclaration); write("")),
+  (((traveller(Name, Y, _), (Y > 11)), transportation(Name, airplane)) ->
+  (not(airline(Name, klm); airline(Name, corendon); airline(Name, tui);
+        airline(Name, transavia); airline(Name, easyjet)) ->
+  documents_list(healthDeclaration); documents_list(healthDeclarationAirline)); write("")),
   documents_list(vaccineDeclaration), documents_list(vaccineProof),
   documents_list(returnJourney), documents_list(visa), documents_list(negativeResult)
   )), documents_procedure(Name).
@@ -473,7 +501,7 @@ mode_of_transportation(Name) :-
 purpose_of_travel(Name) :-
     nl, write("Hello "), write(Name), write("! What is your purpose of travel?"), nl,
     writeln("1 - I am a citizen of Netherlands or another European or Schengen Area Country"),
-    writeln("2 - I am a non-Dutch resident of the Netherlands"),
+    writeln("2 - I am a non-Dutch resident of the Netherlands or another European or Schengen Area Country"),
     writeln("3 - I am an Overseas Filipino Worker in the Netherlands"),
     writeln("4 - I am on a business trip"),
     writeln("5 - I am a tourist"),
@@ -493,7 +521,10 @@ basic_information(Name) :-
     write("What is your name? (Enclose in quotes) "), nl, read(Name),
     write("What is your age? (Enclose in quotes) "), nl, read(Age),
     write("What is your Nationality? (Enclose in quotes) "), nl, read(Citizenship),
-    assertz(traveller(Name, Age, Citizenship)).
+    (
+    (Citizenship = dutch; Citizenship = 'Dutch'; Citizenship = "Dutch") -> assertz(dutch(Name));
+    write("")
+    ), assertz(traveller(Name, Age, Citizenship)).
 
 consultation:-
     basic_information(Name), nl,
