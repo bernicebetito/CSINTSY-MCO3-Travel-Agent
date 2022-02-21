@@ -526,6 +526,16 @@ basic_information(Name) :-
     write("")
     ), assertz(traveller(Name, Age, Citizenship)).
 
-consultation:-
+consul_loop(Loop, Person) :-
+    Loop > 0,
+    write("Person "), write(Person), nl,
     basic_information(Name), nl,
-    purpose_of_travel(Name).
+    purpose_of_travel(Name),
+    NextLoop is Loop - 1,
+    NextPerson is Person + 1,
+    consul_loop(NextLoop, NextPerson).
+
+consultation:-
+    write("Before we begin with the consultation, how many people are travelling? (Enclose in quotes)"), nl, read(Loop),
+    consul_loop(Loop, 1),
+    write("Thank you for consulting!").
