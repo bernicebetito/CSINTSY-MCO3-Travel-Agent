@@ -465,6 +465,9 @@ documents_list(Document) :-
       writeln("   - Recommending your admission to the Netherlands under the exemption for researchers."),
       writeln("   - A printout of a digital copy of the letter may be presented, provided that the signed original remains available for verification.")
     );
+    Document = researcherPermit -> (
+      writeln("* Residence Permit as a Researcher")
+    );
     Document = culturalInvite -> (
       writeln("* Letter of Invitation"),
       writeln("   - Can be digital, provided that the signed original remains available for verification.")
@@ -520,7 +523,7 @@ traveller_documents(Name) :-
     ),
     (workSector(Name, journalist) -> documents_list(ipc); write("")),
     (workSector(Name, eliteAthlete) -> (documents_list(athleteInvite), documents_list(athleteProof)); write("")),
-    (workSector(Name, research) -> (documents_list(researcherLetter)); write("")),
+    (workSector(Name, research) -> (documents_list(researcherLetter), documents_list(researcherPermit)); write("")),
     (workSector(Name, cultural) -> (documents_list(culturalInvite), documents_list(culturalEntry)); write(""))
     );
     purpose(Name, business) -> (
