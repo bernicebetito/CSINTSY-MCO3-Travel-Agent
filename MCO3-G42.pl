@@ -517,7 +517,7 @@ traveller_documents(Name) :-
     (workSector(Name, flightCrew) -> documents_list(flightDeclaration); write("")),
     documents_list(vaccineDeclaration), documents_list(vaccineProof),
     documents_list(returnJourney), documents_list(visa), (
-    (not(workSector(Name, energy)), not(workSector(Name, tranport)),
+    (not(workSector(Name, energy)), not(workSector(Name, transport)),
     not(workSector(Name, flightCrew)), not(workSector(Name, seafarer))) -> documents_list(negativeResult);
     write("")
     ),
