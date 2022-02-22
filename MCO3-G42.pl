@@ -193,6 +193,7 @@ cultural_questions(Name) :-
     ), cultural(Name).
 
 ofw(Name) :-
+    traveller(Name, _, Citizenship), (Citizenship = "Filipino"; Citizenship = "filipino"; Citizenship = "FILIPINO") -> (
     nl, writeln("What sector are you working in?"),
     writeln("1  - Essential Worker"),
     writeln("2  - Cross-Border Commuter"),
@@ -233,7 +234,8 @@ ofw(Name) :-
     X = 17 -> assertz(workSector(Name, others));
     X = 18 -> writeln("Returning to previous question"), purpose_of_travel(Name);
     writeln("Invalid input"), ofw(Name)
-    ).
+    ));
+    writeln("You must be Filipino to qualify as an OFW"), purpose_of_travel(Name).
 
 business(X) :-
     (business_purpose(X, urgent); business_purpose(X, physical); business_purpose(X, economy); business_purpose(X, invite);
