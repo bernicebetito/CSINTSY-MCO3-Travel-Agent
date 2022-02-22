@@ -524,7 +524,7 @@ traveller_documents(Name) :-
     (workSector(Name, journalist) -> documents_list(ipc); write("")),
     (workSector(Name, eliteAthlete) -> (documents_list(athleteInvite), documents_list(athleteProof)); write("")),
     (workSector(Name, research) -> (documents_list(researcherLetter), (
-    (research_job(Name, Y), ((number(Y), (Y > 90)); (Y @> "90"))) -> documents_list(researcherPermit); write("")
+    (research_job(Name, Days), ((number(Days), (Days > 90)); (Days @> "90"))) -> documents_list(researcherPermit); write("")
     )); write("")),
     (workSector(Name, cultural) -> (documents_list(culturalInvite), documents_list(culturalEntry)); write(""))
     );
