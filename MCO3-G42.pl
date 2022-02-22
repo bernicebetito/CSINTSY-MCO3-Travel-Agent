@@ -193,7 +193,7 @@ cultural_questions(Name) :-
     ), cultural(Name).
 
 ofw(Name) :-
-    traveller(Name, _, Citizenship), (Citizenship = "Filipino"; Citizenship = "filipino"; Citizenship = "FILIPINO") -> (
+    traveller(Name, _, Citizenship), (Citizenship = "Filipino"; Citizenship = "filipino"; Citizenship = "FILIPINO"; Citizenship = filipino) -> (
     nl, writeln("What sector are you working in?"),
     writeln("1  - Essential Worker"),
     writeln("2  - Cross-Border Commuter"),
@@ -523,7 +523,9 @@ traveller_documents(Name) :-
     ),
     (workSector(Name, journalist) -> documents_list(ipc); write("")),
     (workSector(Name, eliteAthlete) -> (documents_list(athleteInvite), documents_list(athleteProof)); write("")),
-    (workSector(Name, research) -> (documents_list(researcherLetter), documents_list(researcherPermit)); write("")),
+    (workSector(Name, research) -> (documents_list(researcherLetter), (
+    (research_job(Name, Y), ((number(Y), (Y > 90)); (Y @> "90"))) -> documents_list(researcherPermit); write("")
+    )); write("")),
     (workSector(Name, cultural) -> (documents_list(culturalInvite), documents_list(culturalEntry)); write(""))
     );
     purpose(Name, business) -> (
