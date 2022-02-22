@@ -358,13 +358,13 @@ traveller_procedures(Name) :-
     procedures_list(covidMeasures));
     purpose(Name, ofw) -> (
     procedures_list(documents),
-    (((traveller(Name, Y, _), ((number(Y), (Y > 12)); (Y @> "12"))),
+    (((traveller(Name, _, _)),
     not((workSector(Name, crossBorder); workSector(Name, essentialWorker); workSector(Name, journalist); workSector(Name, flightCrew))))
     -> procedures_list(selfQuarantine); procedures_list(noQuarantine)),
     procedures_list(covidMeasures));
     purpose(Name, business) -> (
     procedures_list(documents),
-    ((traveller(Name, Y, _), ((number(Y), (Y > 12)); (Y @> "12"))) -> procedures_list(selfQuarantine); procedures_list(noQuarantine)),
+    ((traveller(Name, _, _)) -> procedures_list(selfQuarantine)),
     procedures_list(covidMeasures));
     purpose(Name, tourist) -> (
     procedures_list(documents),
@@ -489,7 +489,7 @@ traveller_documents(Name) :-
     documents_list(healthDeclaration); documents_list(healthDeclarationAirline)); write("")),
     ((traveller(Name, Y, _), ((number(Y), (Y < 13)); (Y @< "13"))) -> documents_list(quarantineDeclaration); write("")),
     documents_list(vaccineDeclaration), documents_list(vaccineProof),
-    documents_list(returnJourney), documents_list(negativeResult)
+    documents_list(negativeResult)
     );
     purpose(Name, resident) -> (
     (((traveller(Name, Y, _), ((number(Y), (Y > 11)); (Y @> "11"))), transportation(Name, airplane)) ->
@@ -498,7 +498,7 @@ traveller_documents(Name) :-
     documents_list(healthDeclaration); documents_list(healthDeclarationAirline)); write("")),
     ((traveller(Name, Y, _), ((number(Y), (Y < 13)); (Y @< "13"))) -> documents_list(quarantineDeclaration); write("")),
     documents_list(vaccineDeclaration), documents_list(vaccineProof),
-    documents_list(returnJourney), documents_list(visa), documents_list(negativeResult),
+    documents_list(visa), documents_list(negativeResult),
     (euroResident(Name) -> documents_list(euroResidentProof); write("")),
     (documents(Name, residentPermit) -> documents_list(residentPermit); write("")),
     (documents(Name, longStayVisa) -> documents_list(longStay); write("")),
@@ -516,7 +516,7 @@ traveller_documents(Name) :-
     (workSector(Name, essentialWorker) -> documents_list(medDeclaration); write("")),
     (workSector(Name, flightCrew) -> documents_list(flightDeclaration); write("")),
     documents_list(vaccineDeclaration), documents_list(vaccineProof),
-    documents_list(returnJourney), documents_list(visa), (
+    documents_list(visa), (
     (not(workSector(Name, energy)), not(workSector(Name, transport)),
     not(workSector(Name, flightCrew)), not(workSector(Name, seafarer))) -> documents_list(negativeResult);
     write("")
