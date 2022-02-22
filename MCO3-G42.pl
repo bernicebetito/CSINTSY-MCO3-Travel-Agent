@@ -632,5 +632,5 @@ consul_loop(Loop, Person) :-
     consul_loop(NextLoop, NextPerson).
 
 consultation:-
-    write("Before we begin with the consultation, how many people are travelling? (Enclose in quotes)"), nl, read(Loop),
+    write("Before we begin with the consultation, how many people are travelling?"), nl, read(Loop),
     (consul_loop(Loop, 1); write("Thank you for consulting!")).
