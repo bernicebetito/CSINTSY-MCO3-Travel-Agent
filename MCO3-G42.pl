@@ -315,152 +315,241 @@ tourist(Name) :-
     writeln("Invalid Input!"), tourist(Name)
     ).
 
+procedures_list(Procedure) :-
+    (
+    Procedure = documents -> (
+      writeln("* Prepare the required documents. These documents will be shown to the authorities at the Dutch border.")
+    );
+    Procedure = selfQuarantine -> (
+      writeln("* You are required by law to quarantine for 10 days upon arrival."),
+      writeln("   - If staying for less than 10 days, you must quarantine for the duration of your stay"),
+      writeln("   - The first day of the mandatory quarantine is the day after your arrival"),
+      writeln("   - Upon arrival, get tested by the municipal health service (GGD) or do a self-test"),
+      writeln("   - Make an appointment with the GGD for a free test on day 5"),
+      writeln("   - If the result of your day 5 test is negative, you can end your self-quarantine")
+    );
+    Procedure = noQuarantine -> (
+      writeln("* You are not required to quarantine. However, please ensure to have a Quarantine Declaration and other required documents."),
+      writeln("   - More details could be found in your Required Documents.")
+    );
+    Procedure = covidMeasures -> (
+      writeln("* Kindly ensure to follow the Coronavirus Measures Netherlands has in place."),
+      writeln("   - Wash your hands often and well"),
+      writeln("   - Stay 1.5 metres apart"),
+      writeln("   - If you have symptoms, stay indoors and get tested as soon as possible"),
+      writeln("   - Ensure a good flow of fresh air indoors"),
+      writeln("   - Wear a face mask if required or advised by the establishment you are going to")
+    );
+    write("")
+    ).
+
+traveller_procedures(Name) :-
+    format("~nProcedures to follow upon arrival~n"),
+    (
+    purpose(Name, citizen) -> (
+    procedures_list(documents),
+    ((traveller(Name, Y, _), (Y > 12)) -> procedures_list(selfQuarantine); procedures_list(noQuarantine)),
+    procedures_list(covidMeasures));
+    purpose(Name, resident) -> (
+    procedures_list(documents),
+    ((traveller(Name, Y, _), (Y > 12)) -> procedures_list(selfQuarantine); procedures_list(noQuarantine)),
+    procedures_list(covidMeasures));
+    purpose(Name, ofw) -> (
+    procedures_list(documents),
+    (((traveller(Name, Y, _), (Y > 12)),
+    not((workSector(Name, crossBorder); workSector(Name, essentialWorker); workSector(Name, journalist); workSector(Name, flightCrew))))
+    -> procedures_list(selfQuarantine); procedures_list(noQuarantine)),
+    procedures_list(covidMeasures));
+    purpose(Name, business) -> (
+    procedures_list(documents),
+    ((traveller(Name, Y, _), (Y > 12)) -> procedures_list(selfQuarantine); procedures_list(noQuarantine)),
+    procedures_list(covidMeasures));
+    purpose(Name, tourist) -> (
+    procedures_list(documents),
+    ((traveller(Name, Y, _), (Y > 12)) -> procedures_list(selfQuarantine); procedures_list(noQuarantine)),
+    procedures_list(covidMeasures));
+    write("")
+    ), documents_procedure(Name).
+
 documents_list(Document) :-
-  (
-  Document = healthDeclaration -> (
-    writeln("* Health Declaration Form"),
-    writeln("   - Must be accomplished and can be found at https://www.government.nl/topics/coronavirus-covid-19/documents/publications/2021/07/20/covid-19-and-flying-health-declaration-form"),
-    writeln("   - Form can be printed or digitally filled in"),
-    writeln("       = If you prefer to print, print 2 copies and fill up both"),
-    writeln("       = If you prefer digital, fill up the PDF before the flight")
-  );
-  Document = healthDeclarationAirline -> (
-    writeln("* Health Declaration Form"),
-    writeln("   - Part of your online check-in procedures with the airline")
-  );
-  Document = vaccineDeclaration -> (
-    writeln("* Vaccine Declaration Form"),
-    writeln("   - Must be accomplished and can be found at https://www.government.nl/topics/coronavirus-covid-19/documents/publications/2021/07/01/vaccine-declaration-covid-19")
-  );
-  Document = vaccineProof -> (
-    writeln("* Proof of Vaccination"),
-    writeln("   - Can be either paper or digital certificate issued by a country taking part in the EU Digital Covid Certificate System")
-  );
-  Document = returnJourney -> (
-    writeln("* Proof of Return Journey"),
-    writeln("   - Return ticket issued by airline, bus company, or railway company")
-  );
-  Document = visa -> (
-    writeln("* Visa")
-  );
-  Document = negativeResult -> (
-    writeln("* Negative Test Result"),
-    writeln("   - From NAAT (PCR) test taken no more than 24 hours before departure"),
-    writeln("   - From a NAAT (PCR) test taken no more than 48 hours before departure and a negative result from an antigen test taken no more than 24 hours before departure.")
-  );
-  Document = euroResidentProof -> (
-    writeln("* Proof of Nationality / Residence")
-  );
-  Document = residentPermit -> (
-    writeln("* Resident Permit")
-  );
-  Document = longStay -> (
-    writeln("* Long Stay Visa")
-  );
-  Document = notifImmigration -> (
-    writeln("* Letter of Notification"),
-    writeln("   -  From the Immigration and Naturalisation Service")
-  );
-  Document = diplomaticNote -> (
-    writeln("* Diplomatic note"),
-    writeln("   -  Issued by a Dutch embassy stating that you fall under an exemption to the entry ban")
-  );
-  Document = hotelBooking -> (
-    writeln("* Hotel Booking")
-  );
-  Document = ipc -> (
-  writeln("* Any of the following:"),
-  writeln("   - International Press Card"),
-  writeln("   - Note verbale and a National Press Card or Card from the Media Organisation you work for")
-  );
-  Document = athleteInvite -> (
+    (
+    Document = healthDeclaration -> (
+      writeln("* Health Declaration Form"),
+      writeln("   - Must be accomplished and can be found at https://www.government.nl/topics/coronavirus-covid-19/documents/publications/2021/07/20/covid-19-and-flying-health-declaration-form"),
+      writeln("   - Form can be printed or digitally filled in"),
+      writeln("       = If you prefer to print, print 2 copies and fill up both"),
+      writeln("       = If you prefer digital, fill up the PDF before the flight")
+    );
+    Document = quarantineDeclaration -> (
+      writeln("* Quarantine Declaration"),
+      writeln("   - Must be accomplished and can be found at https://quarantinedeclaration.government.nl/en"),
+      writeln("   - Form can be printed or digitally filled in"),
+      writeln("       = If you prefer to print, make sure to sign it before departing for Netherlands")
+    );
+    Document = medDeclaration -> (
+      writeln("* Declaration"),
+      writeln("   - From your employer or the healthcare provider you work for stating that you have a medical occupation and are travelling in connection with your work")
+    );
+    Document = healthDeclarationAirline -> (
+      writeln("* Health Declaration Form"),
+      writeln("   - Part of your online check-in procedures with the airline")
+    );
+    Document = vaccineDeclaration -> (
+      writeln("* Vaccine Declaration Form"),
+      writeln("   - Must be accomplished and can be found at https://www.government.nl/topics/coronavirus-covid-19/documents/publications/2021/07/01/vaccine-declaration-covid-19")
+    );
+    Document = vaccineProof -> (
+      writeln("* Proof of Vaccination"),
+      writeln("   - Can be either paper or digital certificate issued by a country taking part in the EU Digital Covid Certificate System")
+    );
+    Document = returnJourney -> (
+      writeln("* Proof of Return Journey"),
+      writeln("   - Return ticket issued by airline, bus company, or railway company")
+    );
+    Document = visa -> (
+      writeln("* Visa")
+    );
+    Document = negativeResult -> (
+      writeln("* Negative Test Result"),
+      writeln("   - From NAAT (PCR) test taken no more than 24 hours before departure"),
+      writeln("   - From a NAAT (PCR) test taken no more than 48 hours before departure and a negative result from an antigen test taken no more than 24 hours before departure.")
+    );
+    Document = euroResidentProof -> (
+      writeln("* Proof of Nationality / Residence")
+    );
+    Document = residentPermit -> (
+      writeln("* Resident Permit")
+    );
+    Document = longStay -> (
+      writeln("* Long Stay Visa")
+    );
+    Document = notifImmigration -> (
+      writeln("* Letter of Notification"),
+      writeln("   -  From the Immigration and Naturalisation Service")
+    );
+    Document = diplomaticNote -> (
+      writeln("* Diplomatic note"),
+      writeln("   -  Issued by a Dutch embassy stating that you fall under an exemption to the entry ban")
+    );
+    Document = hotelBooking -> (
+      writeln("* Hotel Booking")
+    );
+    Document = flightDeclaration -> (
+      writeln("* Employer's Declaration"),
+      writeln("   -  Must state that you work in passenger transport")
+    );
+    Document = crossDeclaration -> (
+      writeln("* Employer Declaration"),
+      writeln("   -  Must state that you live in a different country than your place of work"),
+      writeln("   -  Must also state that you are required to commute across the border at least once a week")
+    );
+    Document = ipc -> (
     writeln("* Any of the following:"),
-    writeln("   - Note Verbale"),
-    writeln("   - Letter of invitation from the Netherlands Olympic Committee (NOC*NSF) or the Royal Netherlands Football Association (KNVB)")
-  );
-  Document = athleteProof -> (
-    writeln("* Valid proof of participation in an international sporting event, tournament, or match at the highest level"),
-    writeln("   - Officially recognised by an international sports federation with which the Netherlands is affiliated")
-  );
-  Document = researcherLetter -> (
-    writeln("* A letter from the Netherlands Enterprise Agency (RVO)"),
-    writeln("   - Recommending your admission to the Netherlands under the exemption for researchers."),
-    writeln("   - A printout of a digital copy of the letter may be presented, provided that the signed original remains available for verification.")
-  );
-  Document = culturalInvite -> (
-    writeln("* Letter of Invitation"),
-    writeln("   - Can be digital, provided that the signed original remains available for verification.")
-  );
-  Document = culturalEntry -> (
-    writeln("* Signed Entry Statement"),
-    writeln("   - Can be digital, provided that the signed original remains available for verification.")
-  );
-  write("")
-  ).
+    writeln("   - International Press Card along with the letter from the International Federation of Journalists website"),
+    writeln("       = https://www.ifj.org/fileadmin/user_upload/Standaardbrief_NVJ_inzake_International_Press_Card__IPC_.pdf"),
+    writeln("   - Note verbale and a National Press Card or Card from the Media Organisation you work for")
+    );
+    Document = athleteInvite -> (
+      writeln("* Any of the following:"),
+      writeln("   - Note Verbale"),
+      writeln("   - Letter of invitation from the Netherlands Olympic Committee (NOC*NSF) or the Royal Netherlands Football Association (KNVB)")
+    );
+    Document = athleteProof -> (
+      writeln("* Valid proof of participation in an international sporting event, tournament, or match at the highest level"),
+      writeln("   - Officially recognised by an international sports federation with which the Netherlands is affiliated")
+    );
+    Document = researcherLetter -> (
+      writeln("* A letter from the Netherlands Enterprise Agency (RVO)"),
+      writeln("   - Recommending your admission to the Netherlands under the exemption for researchers."),
+      writeln("   - A printout of a digital copy of the letter may be presented, provided that the signed original remains available for verification.")
+    );
+    Document = culturalInvite -> (
+      writeln("* Letter of Invitation"),
+      writeln("   - Can be digital, provided that the signed original remains available for verification.")
+    );
+    Document = culturalEntry -> (
+      writeln("* Signed Entry Statement"),
+      writeln("   - Can be digital, provided that the signed original remains available for verification.")
+    );
+    write("")
+    ).
 
 traveller_documents(Name) :-
-  format("~nRequired Documents~n"),
-  (
-  purpose(Name, citizen) -> (
-  (((traveller(Name, Y, _), (Y > 11)), transportation(Name, airplane)) ->
-  (not(airline(Name, klm); airline(Name, corendon); airline(Name, tui);
-        airline(Name, transavia); airline(Name, easyjet)) ->
-  documents_list(healthDeclaration); documents_list(healthDeclarationAirline)); write("")),
-  documents_list(vaccineDeclaration), documents_list(vaccineProof),
-  documents_list(returnJourney), documents_list(negativeResult)
-  );
-  purpose(Name, resident) -> (
-  (((traveller(Name, Y, _), (Y > 11)), transportation(Name, airplane)) ->
-  (not(airline(Name, klm); airline(Name, corendon); airline(Name, tui);
-        airline(Name, transavia); airline(Name, easyjet)) ->
-  documents_list(healthDeclaration); documents_list(healthDeclarationAirline)); write("")),
-  documents_list(vaccineDeclaration), documents_list(vaccineProof),
-  documents_list(returnJourney), documents_list(visa), documents_list(negativeResult),
-  (euroResident(Name) -> documents_list(euroResidentProof); write("")),
-  (documents(Name, residentPermit) -> documents_list(residentPermit); write("")),
-  (documents(Name, longStayVisa) -> documents_list(longStay); write("")),
-  (documents(Name, notifImmigration) -> documents_list(notifImmigration); write(""))
-  );
-  purpose(Name, ofw) -> (
-  (((traveller(Name, Y, _), (Y > 11)), transportation(Name, airplane)) ->
-  (not(airline(Name, klm); airline(Name, corendon); airline(Name, tui);
-        airline(Name, transavia); airline(Name, easyjet)) ->
-  documents_list(healthDeclaration); documents_list(healthDeclarationAirline)); write("")),
-  documents_list(vaccineDeclaration), documents_list(vaccineProof),
-  documents_list(returnJourney), documents_list(visa), (
-  (not(workSector(Name, energy)), not(workSector(Name, tranport)),
-  not(workSector(Name, flightCrew)), not(workSector(Name, seafarer))) -> documents_list(negativeResult);
-  write("")
-  ),
-  (workSector(Name, journalist) -> documents_list(ipc); write("")),
-  (workSector(Name, eliteAthlete) -> (documents_list(athleteInvite), documents_list(athleteProof)); write("")),
-  (workSector(Name, research) -> (documents_list(researcherLetter)); write("")),
-  (workSector(Name, cultural) -> (documents_list(culturalInvite), documents_list(culturalEntry)); write(""))
-  );
-  purpose(Name, business) -> (
-  (((traveller(Name, Y, _), (Y > 11)), transportation(Name, airplane)) ->
-  (not(airline(Name, klm); airline(Name, corendon); airline(Name, tui);
-        airline(Name, transavia); airline(Name, easyjet)) ->
-  documents_list(healthDeclaration); documents_list(healthDeclarationAirline)); write("")),
-  documents_list(vaccineDeclaration), documents_list(vaccineProof),
-  documents_list(returnJourney), documents_list(visa), documents_list(negativeResult),
-  documents_list(diplomaticNote), documents_list(hotelBooking)
-  );
-  purpose(Name, tourist) -> (
-  (((traveller(Name, Y, _), (Y > 11)), transportation(Name, airplane)) ->
-  (not(airline(Name, klm); airline(Name, corendon); airline(Name, tui);
-        airline(Name, transavia); airline(Name, easyjet)) ->
-  documents_list(healthDeclaration); documents_list(healthDeclarationAirline)); write("")),
-  documents_list(vaccineDeclaration), documents_list(vaccineProof),
-  documents_list(returnJourney), documents_list(visa), documents_list(negativeResult)
-  )), documents_procedure(Name).
+    format("~nRequired Documents~n"),
+    (
+    purpose(Name, citizen) -> (
+    (((traveller(Name, Y, _), (Y > 11)), transportation(Name, airplane)) ->
+    (not(airline(Name, klm); airline(Name, corendon); airline(Name, tui);
+          airline(Name, transavia); airline(Name, easyjet)) ->
+    documents_list(healthDeclaration); documents_list(healthDeclarationAirline)); write("")),
+    ((traveller(Name, Y, _), (Y < 13)) -> documents_list(quarantineDeclaration); write("")),
+    documents_list(vaccineDeclaration), documents_list(vaccineProof),
+    documents_list(returnJourney), documents_list(negativeResult)
+    );
+    purpose(Name, resident) -> (
+    (((traveller(Name, Y, _), (Y > 11)), transportation(Name, airplane)) ->
+    (not(airline(Name, klm); airline(Name, corendon); airline(Name, tui);
+          airline(Name, transavia); airline(Name, easyjet)) ->
+    documents_list(healthDeclaration); documents_list(healthDeclarationAirline)); write("")),
+    ((traveller(Name, Y, _), (Y < 13)) -> documents_list(quarantineDeclaration); write("")),
+    documents_list(vaccineDeclaration), documents_list(vaccineProof),
+    documents_list(returnJourney), documents_list(visa), documents_list(negativeResult),
+    (euroResident(Name) -> documents_list(euroResidentProof); write("")),
+    (documents(Name, residentPermit) -> documents_list(residentPermit); write("")),
+    (documents(Name, longStayVisa) -> documents_list(longStay); write("")),
+    (documents(Name, notifImmigration) -> documents_list(notifImmigration); write(""))
+    );
+    purpose(Name, ofw) -> (
+    (((traveller(Name, Y, _), (Y > 11)), transportation(Name, airplane)) ->
+    (not(airline(Name, klm); airline(Name, corendon); airline(Name, tui);
+          airline(Name, transavia); airline(Name, easyjet)) ->
+    documents_list(healthDeclaration); documents_list(healthDeclarationAirline)); write("")),
+    (((traveller(Name, Y, _), (Y < 13));
+    (workSector(Name, crossBorder); workSector(Name, essentialWorker); workSector(Name, journalist); workSector(Name, flightCrew))) ->
+    documents_list(quarantineDeclaration); write("")),
+    (workSector(Name, crossBorder) -> documents_list(crossDeclaration); write("")),
+    (workSector(Name, essentialWorker) -> documents_list(medDeclaration); write("")),
+    (workSector(Name, flightCrew) -> documents_list(flightDeclaration); write("")),
+    documents_list(vaccineDeclaration), documents_list(vaccineProof),
+    documents_list(returnJourney), documents_list(visa), (
+    (not(workSector(Name, energy)), not(workSector(Name, tranport)),
+    not(workSector(Name, flightCrew)), not(workSector(Name, seafarer))) -> documents_list(negativeResult);
+    write("")
+    ),
+    (workSector(Name, journalist) -> documents_list(ipc); write("")),
+    (workSector(Name, eliteAthlete) -> (documents_list(athleteInvite), documents_list(athleteProof)); write("")),
+    (workSector(Name, research) -> (documents_list(researcherLetter)); write("")),
+    (workSector(Name, cultural) -> (documents_list(culturalInvite), documents_list(culturalEntry)); write(""))
+    );
+    purpose(Name, business) -> (
+    (((traveller(Name, Y, _), (Y > 11)), transportation(Name, airplane)) ->
+    (not(airline(Name, klm); airline(Name, corendon); airline(Name, tui);
+          airline(Name, transavia); airline(Name, easyjet)) ->
+    documents_list(healthDeclaration); documents_list(healthDeclarationAirline)); write("")),
+    ((traveller(Name, Y, _), (Y < 13)) -> documents_list(quarantineDeclaration); write("")),
+    documents_list(vaccineDeclaration), documents_list(vaccineProof),
+    documents_list(returnJourney), documents_list(visa), documents_list(negativeResult),
+    documents_list(diplomaticNote), documents_list(hotelBooking)
+    );
+    purpose(Name, tourist) -> (
+    (((traveller(Name, Y, _), (Y > 11)), transportation(Name, airplane)) ->
+    (not(airline(Name, klm); airline(Name, corendon); airline(Name, tui);
+          airline(Name, transavia); airline(Name, easyjet)) ->
+    documents_list(healthDeclaration); documents_list(healthDeclarationAirline)); write("")),
+    ((traveller(Name, Y, _), (Y < 13)) -> documents_list(quarantineDeclaration); write("")),
+    documents_list(vaccineDeclaration), documents_list(vaccineProof),
+    documents_list(returnJourney), documents_list(visa), documents_list(negativeResult)
+    );
+    write("")
+    ), documents_procedure(Name).
 
 documents_procedure(Name) :-
     (purpose(Name, citizen); purpose(Name, resident); purpose(Name, ofw); purpose(Name, business); purpose(Name, tourist)) -> (
     format("~nSelect an Option:~n1 - Required Documents~n2 - Procedure~n3 - Exit~n"), read(X),
     (
     X = 1 -> traveller_documents(Name);
-    X = 3 -> writeln("Thank you for consulting!");
+    X = 2 -> traveller_procedures(Name);
+    X = 3 -> writeln("Exiting system...");
     writeln("Invalid Input!"), documents_procedure(Name)
     )
     );
@@ -537,5 +626,4 @@ consul_loop(Loop, Person) :-
 
 consultation:-
     write("Before we begin with the consultation, how many people are travelling? (Enclose in quotes)"), nl, read(Loop),
-    consul_loop(Loop, 1),
-    write("Thank you for consulting!").
+    (consul_loop(Loop, 1); write("Thank you for consulting!")).
